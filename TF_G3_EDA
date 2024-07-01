@@ -1,0 +1,306 @@
+import java.util.*;
+
+// Clase Empleado
+class Empleado {
+    private String nombre;
+    private String apellido;
+    private String DNI;
+    private String rol;
+    private List<String> antecedentesLaborales;
+
+    public Empleado(String nombre, String apellido, String DNI, String rol, List<String> antecedentesLaborales) {
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.DNI = DNI;
+        this.rol = rol;
+        this.antecedentesLaborales = antecedentesLaborales;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public String getApellido() {
+        return apellido;
+    }
+
+    public String getDNI() {
+        return DNI;
+    }
+
+    public String getRol() {
+        return rol;
+    }
+
+    public void setRol(String rol) {
+        this.rol = rol;
+    }
+
+    public List<String> getAntecedentesLaborales() {
+        return antecedentesLaborales;
+    }
+
+    public void addAntecedenteLaboral(String antecedente) {
+        this.antecedentesLaborales.add(antecedente);
+    }
+}
+
+// Clase Licencia
+class Licencia {
+    private String motivo;
+    private Date fechaInicio;
+    private Date fechaFin;
+
+    public Licencia(String motivo, Date fechaInicio, Date fechaFin) {
+        this.motivo = motivo;
+        this.fechaInicio = fechaInicio;
+        this.fechaFin = fechaFin;
+    }
+
+    public String getMotivo() {
+        return motivo;
+    }
+
+    public Date getFechaInicio() {
+        return fechaInicio;
+    }
+
+    public Date getFechaFin() {
+        return fechaFin;
+    }
+}
+
+// Clase GestorRecursosHumanos
+class GestorRecursosHumanos {
+    private List<Empleado> empleados;
+    private List<Licencia> licencias;
+    Stack<Empleado> pilaEmpleados; // Estructura de pila para empleados
+    private Queue<Licencia> colaLicencias; // Estructura de cola para licencias
+
+    public GestorRecursosHumanos() {
+        this.empleados = new ArrayList<>();
+        this.licencias = new ArrayList<>();
+        this.pilaEmpleados = new Stack<>();
+        this.colaLicencias = new LinkedList<>();
+    }
+
+    public void registrarEmpleado(Empleado empleado) {
+        empleados.add(empleado);
+        pilaEmpleados.push(empleado); // Añadir empleado a la pila
+    }
+
+    public void actualizarEmpleado(String DNI, String nuevoRol, List<String> nuevosAntecedentes) {
+        for (Empleado emp : empleados) {
+            if (emp.getDNI().equals(DNI)) {
+                emp.setRol(nuevoRol);
+                emp.getAntecedentesLaborales().clear();
+                emp.getAntecedentesLaborales().addAll(nuevosAntecedentes);
+            }
+        }
+    }
+
+    public Empleado consultarEmpleado(String DNI) {
+        for (Empleado emp : empleados) {
+            if (emp.getDNI().equals(DNI)) {
+                return emp;
+            }
+        }
+        return null;
+    }
+
+    public List<Empleado> consultarEmpleados() {
+        return empleados;
+    }
+
+    public void eliminarEmpleado(String DNI) {
+        empleados.removeIf(emp -> emp.getDNI().equals(DNI));
+    }
+
+    public void registrarLicencia(Licencia licencia) {
+        licencias.add(licencia);
+        colaLicencias.offer(licencia); // Añadir licencia a la cola
+    }
+
+    public List<Licencia> getLicencias() {
+        return licencias;
+    }
+
+    public void gestionarLicencia(String DNI, Licencia licencia) {
+        for (Empleado emp : empleados) {
+            if (emp.getDNI().equals(DNI)) {
+                registrarLicencia(licencia);
+            }
+        }
+    }
+
+    // Métodos Recursivos
+    public int sumarAntecedentesLaborales(List<Empleado> empleados, int index) {
+        if (index == empleados.size()) {
+            return 0;
+        }
+        return empleados.get(index).getAntecedentesLaborales().size() + sumarAntecedentesLaborales(empleados, index + 1);
+    }
+
+    public Empleado busquedaBinariaEmpleado(List<Empleado> empleados, String DNI, int izquierda, int derecha) {
+        if (izquierda > derecha) {
+            return null;
+        }
+        int medio = (izquierda + derecha) / 2;
+        Empleado empleado = empleados.get(medio);
+        if (empleado.getDNI().equals(DNI)) {
+            return empleado;
+        } else if (empleado.getDNI().compareTo(DNI) < 0) {
+            return busquedaBinariaEmpleado(empleados, DNI, medio + 1, derecha);
+        } else {
+            return busquedaBinariaEmpleado(empleados, DNI, izquierda, medio - 1);
+        }
+    }
+
+    public int calcularProfundidadPila(Stack<Empleado> pila) {
+        if (pila.isEmpty()) {
+            return 0;
+        }
+        pila.pop();
+        return 1 + calcularProfundidadPila(pila);
+    }
+
+    // Métodos de Ordenamiento
+    public void ordenarEmpleadosPorNombre(List<Empleado> empleados) {
+        int n = empleados.size();
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = 0; j < n - 1 - i; j++) {
+                if (empleados.get(j).getNombre().compareTo(empleados.get(j + 1).getNombre()) > 0) {
+                    Collections.swap(empleados, j, j + 1);
+                }
+            }
+        }
+    }
+
+    public void ordenarEmpleadosPorDNI(List<Empleado> empleados) {
+        int n = empleados.size();
+        for (int i = 1; i < n; i++) {
+            Empleado key = empleados.get(i);
+            int j = i - 1;
+            while (j >= 0 && empleados.get(j).getDNI().compareTo(key.getDNI()) > 0) {
+                empleados.set(j + 1, empleados.get(j));
+                j--;
+            }
+            empleados.set(j + 1, key);
+        }
+    }
+
+    public void ordenarEmpleadosPorRol(List<Empleado> empleados) {
+        int n = empleados.size();
+        for (int i = 0; i < n - 1; i++) {
+            int minIndex = i;
+            for (int j = i + 1; j < n; j++) {
+                if (empleados.get(j).getRol().compareTo(empleados.get(minIndex).getRol()) < 0) {
+                    minIndex = j;
+                }
+            }
+            Collections.swap(empleados, i, minIndex);
+        }
+    }
+
+    // Métodos de Búsqueda
+    public List<Empleado> buscarEmpleadosPorNombre(List<Empleado> empleados, String nombre) {
+        List<Empleado> resultado = new ArrayList<>();
+        for (Empleado emp : empleados) {
+            if (emp.getNombre().equalsIgnoreCase(nombre)) {
+                resultado.add(emp);
+            }
+        }
+        return resultado;
+    }
+
+    public List<Empleado> buscarEmpleadosPorRol(List<Empleado> empleados, String rol) {
+        List<Empleado> resultado = new ArrayList<>();
+        for (Empleado emp : empleados) {
+            if (emp.getRol().equalsIgnoreCase(rol)) {
+                resultado.add(emp);
+            }
+        }
+        return resultado;
+    }
+
+    public List<Licencia> buscarLicenciasPorMotivo(List<Licencia> licencias, String motivo) {
+        List<Licencia> resultado = new ArrayList<>();
+        for (Licencia lic : licencias) {
+            if (lic.getMotivo().equalsIgnoreCase(motivo)) {
+                resultado.add(lic);
+            }
+        }
+        return resultado;
+    }
+}
+
+// Clase Main
+class Main {
+    public static void main(String[] args) {
+        GestorRecursosHumanos gestor = new GestorRecursosHumanos();
+
+        // Registrar un nuevo empleado
+        List<String> antecedentes = new ArrayList<>();
+        antecedentes.add("Empresa A: 2015-2018");
+        antecedentes.add("Empresa B: 2018-2021");
+        Empleado emp1 = new Empleado("Juan", "Pérez", "12345678", "Desarrollador", antecedentes);
+        gestor.registrarEmpleado(emp1);
+
+        // Actualizar empleado
+        List<String> nuevosAntecedentes = new ArrayList<>();
+        nuevosAntecedentes.add("Empresa C: 2021-2022");
+        gestor.actualizarEmpleado("12345678", "Senior Developer", nuevosAntecedentes);
+
+        // Consultar un empleado
+        Empleado empleadoConsultado = gestor.consultarEmpleado("12345678");
+        if (empleadoConsultado != null) {
+            System.out.println("Empleado consultado: " + empleadoConsultado.getNombre() + " " + empleadoConsultado.getApellido());
+        } else {
+            System.out.println("Empleado no encontrado.");
+        }
+
+        // Consultar todos los empleados
+        List<Empleado> empleados = gestor.consultarEmpleados();
+        System.out.println("Total empleados: " + empleados.size());
+
+        // Eliminar un empleado
+        gestor.eliminarEmpleado("12345678");
+        System.out.println("Total empleados después de eliminación: " + gestor.consultarEmpleados().size());
+
+        // Registrar y gestionar una licencia
+        Licencia licencia1 = new Licencia("Vacaciones", new Date(), new Date());
+        gestor.gestionarLicencia("12345678", licencia1);
+
+        // Consultar licencias
+        List<Licencia> licencias = gestor.getLicencias();
+        System.out.println("Total licencias: " + licencias.size());
+
+        // Uso de método recursivo para contar antecedentes laborales
+        System.out.println("Total antecedentes laborales: " + gestor.sumarAntecedentesLaborales(empleados, 0));
+
+        // Uso de búsqueda binaria recursiva
+        Empleado encontrado = gestor.busquedaBinariaEmpleado(empleados, "12345678", 0, empleados.size() - 1);
+        if (encontrado != null) {
+            System.out.println("Empleado encontrado con búsqueda binaria: " + encontrado.getNombre());
+        } else {
+            System.out.println("Empleado no encontrado con búsqueda binaria.");
+        }
+
+        // Uso de método recursivo para calcular profundidad de la pila
+        System.out.println("Profundidad de la pila: " + gestor.calcularProfundidadPila(gestor.pilaEmpleados));
+
+        // Ordenamiento y búsqueda de empleados
+        gestor.ordenarEmpleadosPorNombre(empleados);
+        gestor.ordenarEmpleadosPorDNI(empleados);
+        gestor.ordenarEmpleadosPorRol(empleados);
+
+        List<Empleado> encontradosPorNombre = gestor.buscarEmpleadosPorNombre(empleados, "Juan");
+        System.out.println("Empleados encontrados por nombre: " + encontradosPorNombre.size());
+
+        List<Empleado> encontradosPorRol = gestor.buscarEmpleadosPorRol(empleados, "Desarrollador");
+        System.out.println("Empleados encontrados por rol: " + encontradosPorRol.size());
+
+        List<Licencia> licenciasPorMotivo = gestor.buscarLicenciasPorMotivo(licencias, "Vacaciones");
+        System.out.println("Licencias encontradas por motivo: " + licenciasPorMotivo.size());
+    }
+}
